@@ -46,7 +46,7 @@ def predict_growing_days(temperature, humidity, soil_moisture):
 #     return response
     
 @app.route('/upload_sensor_data', methods=['POST','GET'])
-def process_data():
+def upload_sensor_data():
     temperature = float(request.form.get('temp'))
     humidity = float(request.form.get('humi'))
     soil_moisture = float(request.form.get('soilMoisture'))
