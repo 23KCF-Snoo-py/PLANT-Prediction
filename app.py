@@ -42,7 +42,7 @@ def predict_growing_days(temperature, humidity, soil_moisture):
 def process_data():
     temperature = float(request.form.get('Temp'))
     humidity = float(request.form.get('humi'))
-    soil_moisture = float(request.form.get('soilMoisture'))
+    soil_moisture = float(request.form.get('soil'))
     predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
     app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
     response = {
