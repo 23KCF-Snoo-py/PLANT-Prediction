@@ -12,16 +12,22 @@ def analyze_leaf(image):
     green_percentage = (average_color[1] / 255) * 100
     return green_percentage
 
-def predict_growing_days(temperature, humidity, soil_moisture):
+def predict_growing_days(plant, temperature, humidity, soil_moisture):
     training_data = {
         '온도': [20, 25, 30, 35, 40],
         '습도': [30, 35, 40, 45, 50],
         '토양수분': [0.2, 0.4, 0.6, 0.8, 1.0],
-        '재배_가능일': [60, 65, 70, 75, 80]
+        '상추': [60, 65, 70, 75, 80],
+        '허브': [50, 55, 60, 65, 70],
+        '딸기': [70, 75, 80, 85, 90],
+        '토마토': [80, 85, 90, 95, 100],
+        '바질': [55, 60, 65, 70, 75],
+        '샐러리': [65, 70, 75, 80, 85],
+        '케일': [45, 50, 55, 60, 65]
     }
     df = pd.DataFrame(training_data)
     X = df[['온도', '습도', '토양수분']]
-    y = df['재배_가능일']
+    y = df[plant]
     model = LinearRegression()
     model.fit(X, y)
     new_data = {
@@ -35,31 +41,16 @@ def predict_growing_days(temperature, humidity, soil_moisture):
 
 @app.route('/upload_sensor_data', methods=['POST'])
 def process_data():
+    plant = request.form.get('plant')
     temperature = float(request.form.get('temp'))
     humidity = float(request.form.get('humi'))
     soil_moisture = float(request.form.get('soilMoisture'))
-    predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
-    app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
+    predicted_days = predict_growing_days(plant, temperature, humidity, soil_moisture)
+    app.logger.debug("Received data - Plant: {}, Temperature: {}, Humidity: {}, Soil Moisture: {}".format(plant, temperature, humidity, soil_moisture))
     response = {
         'predicted_days': predicted_days
     }
     return response
-    
-# @app.route('/upload_sensor_data', methods=['POST','GET']  )
-# def upload_sensor_data():
-#     temperature = float(request.form.get('temp'))
-#     humidity = float(request.form.get('humi'))
-#     soil_moisture = float(request.form.get('soilMoisture'))
-
-#     # 데이터 처리 및 원하는 동작 수행
-#     # 예시로 간단히 로그에 출력하고 응답을 생성하는 코드를 추가했습니다.
-#     app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
-#     response = {
-#         'message': 'Data received and processed successfully'
-#     }
-#     return response
-
-
 
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
@@ -77,4 +68,3 @@ def upload_image():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
-    
