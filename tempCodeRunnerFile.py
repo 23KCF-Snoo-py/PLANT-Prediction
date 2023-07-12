@@ -33,34 +33,18 @@ def predict_growing_days(temperature, humidity, soil_moisture):
     predicted_days = model.predict(df_new)
     return predicted_days[0]
 
-# @app.route('/upload_sensor_data', methods=['POST'])
-# def process_data():
-#     temperature = float(request.form.get('temp'))
-#     humidity = float(request.form.get('humi'))
-#     soil_moisture = float(request.form.get('soilMoisture'))
-#     predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
-#     app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
-#     response = {
-#         'predicted_days': predicted_days
-#     }
-#     return response
-    
-@app.route('/upload_sensor_data', methods=['POST','GET'])
+@app.route('/upload_sensor_data', methods=['POST'])
 def process_data():
     temperature = float(request.form.get('temp'))
     humidity = float(request.form.get('humi'))
     soil_moisture = float(request.form.get('soilMoisture'))
+    predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
 
-    # 데이터 처리 및 원하는 동작 수행
-    # 예시로 간단히 로그에 출력하고 응답을 생성하는 코드를 추가했습니다.
-    app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
     response = {
-        'message': 'Data received and processed successfully'
+        'predicted_days': predicted_days
     }
     return response
-
-
-
+    
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
     image_file = request.files['image']
@@ -68,7 +52,7 @@ def upload_image():
         image_path = 'path/to/save/image.jpg'
         image_file.save(image_path)
     leaf_status = analyze_leaf(image_file)
-
+    
     response = {
         'leaf_status': leaf_status,
     }
@@ -76,4 +60,4 @@ def upload_image():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=1234)
