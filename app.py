@@ -40,23 +40,42 @@ def predict_growing_days(temperature, humidity, soil_moisture):
 
 @app.route('/upload_sensor_data', methods=['POST'])
 def process_data():
-    temperature = float(request.form.get('temp'))
-    humidity = float(request.form.get('humi'))
-    soil_moisture = float(request.form.get('soilMoisture'))
-    predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
-    app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
-    response = {
-        'predicted_days': {
-            'Lettuce': predicted_days[0],
-            'Basil': predicted_days[1],
-            'Strawberry': predicted_days[2],
-            'Tomato': predicted_days[3],
-            'Herb': predicted_days[4],
-            'Celery': predicted_days[5],
-            'Kale': predicted_days[6]
+    temperature = request.form.get('temp')
+    humidity = request.form.get('humi')
+    soil_moisture = request.form.get('soilMoisture')
+    
+    if temperature is not None and temperature.replace('.', '', 1).isdigit():
+        temperature = float(temperature)
+    else:
+        raise ValueError("Invalid temperature value")# 온도 값이 유효하지 않은 경우에 대한 처리 로직 추가
+    
+    if humidity is not None and humidity.replace('.', '', 1).isdigit():
+        humidity = float(humidity)
+    else:
+        raise ValueError("Invalid temperature value")# 습도 값이 유효하지 않은 경우에 대한 처리 로직 추가
+    
+    if soil_moisture is not None and soil_moisture.replace('.', '', 1).isdigit():
+        soil_moisture = float(soil_moisture)
+    else:
+        raise ValueError("Invalid temperature value")# 토양수분 값이 유효하지 않은 경우에 대한 처리 로직 추가
+    
+    if temperature is not None and humidity is not None and soil_moisture is not None:
+        predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
+        app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
+        response = {
+            'predicted_days': {
+                'Lettuce': predicted_days[0],
+                'Basil': predicted_days[1],
+                'Strawberry': predicted_days[2],
+                'Tomato': predicted_days[3],
+                'Herb': predicted_days[4],
+                'Celery': predicted_days[5],
+                'Kale': predicted_days[6]
+            }
         }
-    }
-    return jsonify(response)
+        return jsonify(response)
+    
+    # 온도, 습도, 토양수분 값이 유효하지 않은 경우에 대한 처리 로직 추가
 
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
