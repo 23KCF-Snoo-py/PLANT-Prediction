@@ -40,7 +40,7 @@ def predict_growing_days(temperature, humidity, soil_moisture):
 
 @app.route('/upload_sensor_data', methods=['POST'])
 def process_data():
-    temperature = request.form.get('temp')
+    temperature = request.form.get('Temp')
     humidity = request.form.get('humi')
     soil_moisture = request.form.get('soilMoisture')
     
