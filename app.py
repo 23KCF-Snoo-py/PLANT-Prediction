@@ -1,18 +1,10 @@
 from flask import Flask, request
-import cv2
 import pandas as pd
 from sklearn.linear_model import LinearRegression
-import numpy as np
 
 app = Flask(__name__)
 
-def analyze_leaf(image):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    average_color = image.mean(axis=0).mean(axis=0)
-    green_percentage = (average_color[1] / 255) * 100
-    return green_percentage
-
-def predict_growing_days(plant, temperature, humidity, soil_moisture):
+def predict_growing_days(temperature, humidity, soil_moisture):
     training_data = {
         '온도': [20, 25, 30, 35, 40],
         '습도': [30, 35, 40, 45, 50],
@@ -27,7 +19,7 @@ def predict_growing_days(plant, temperature, humidity, soil_moisture):
     }
     df = pd.DataFrame(training_data)
     X = df[['온도', '습도', '토양수분']]
-    y = df[plant]
+    y = df[['상추', '허브', '딸기', '토마토', '바질', '샐러리', '케일']]
     model = LinearRegression()
     model.fit(X, y)
     new_data = {
@@ -39,32 +31,21 @@ def predict_growing_days(plant, temperature, humidity, soil_moisture):
     predicted_days = model.predict(df_new)
     return predicted_days[0]
 
-@app.route('/upload_sensor_data', methods=['POST'])
-def process_data():
-    plant = request.form.get('plant')
-    temperature = float(request.form.get('temp'))
-    humidity = float(request.form.get('humi'))
-    soil_moisture = float(request.form.get('soilMoisture'))
-    predicted_days = predict_growing_days(plant, temperature, humidity, soil_moisture)
-    app.logger.debug("Received data - Plant: {}, Temperature: {}, Humidity: {}, Soil Moisture: {}".format(plant, temperature, humidity, soil_moisture))
+@app.route('/predict_all', methods=['POST'])
+def predict_all_plants():
+    temperature = float(request.form.get('temperature'))
+    humidity = float(request.form.get('humidity'))
+    soil_moisture = float(request.form.get('soil_moisture'))
+    predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
+    app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
+    
+    plant_names = ['상추', '허브', '딸기', '토마토', '바질', '샐러리', '케일']
+    predicted_days_dict = dict(zip(plant_names, predicted_days))
+    
     response = {
-        'predicted_days': predicted_days
+        'predicted_days': predicted_days_dict
     }
     return response
-
-@app.route('/upload_image', methods=['POST'])
-def upload_image():
-    image_file = request.files['image']
-    if image_file:
-        image_path = 'path/to/save/image.jpg'
-        image_file.save(image_path)
-    leaf_status = analyze_leaf(image_file)
-
-    response = {
-        'leaf_status': leaf_status,
-    }
-    return response
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
