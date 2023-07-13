@@ -11,11 +11,12 @@ def analyze_leaf(image):
     green_percentage = (average_color[1] / 255) * 100
     return green_percentage
 
-def predict_growing_days(temperature, humidity, soil_moisture):
+def predict_growing_days(temperature, humidity, soil_moisture, cds):
     training_data = {
         'temp': [20, 25, 30, 35, 40],
         'humi': [30, 35, 40, 45, 50],
         'soilMoisture': [0.2, 0.4, 0.6, 0.8, 1.0],
+        'cds': [100, 200, 300, 400, 500],  # 가정한 조도(빛의 밝기) 값
         'Lettuce': [60, 65, 70, 75, 80],
         'Basil': [50, 55, 60, 65, 70],
         'Strawberry': [70, 75, 80, 85, 90],
@@ -25,14 +26,15 @@ def predict_growing_days(temperature, humidity, soil_moisture):
         'Kale': [45, 50, 55, 60, 65]
     }
     df = pd.DataFrame(training_data)
-    X = df[['temp', 'humi', 'soilMoisture']]
+    X = df[['temp', 'humi', 'soilMoisture', 'cds']]
     y = df[['Lettuce', 'Basil', 'Strawberry', 'Tomato', 'Herb', 'Celery', 'Kale']]
     model = LinearRegression()
     model.fit(X, y)
     new_data = {
         'temp': [temperature],
         'humi': [humidity],
-        'soilMoisture': [soil_moisture]
+        'soilMoisture': [soil_moisture],
+        'cds': [cds]
     }
     df_new = pd.DataFrame(new_data)
     predicted_days = model.predict(df_new)
@@ -43,8 +45,9 @@ def process_data():
     temperature = float(request.form.get('Temp'))
     humidity = float(request.form.get('humi'))
     soil_moisture = float(request.form.get('soil'))
-    predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
-    app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
+    cds = float(request.form.get('cds'))
+    predicted_days = predict_growing_days(temperature, humidity, soil_moisture, cds)
+    app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}, CDS: {}".format(temperature, humidity, soil_moisture, cds))
     response = {
         'predicted_days': {
             'Lettuce': predicted_days[0],
