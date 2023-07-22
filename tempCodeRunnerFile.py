@@ -40,7 +40,7 @@ def predict_growing_days(temperature, humidity, soil_moisture, cds):
     predicted_days = model.predict(df_new)
     return predicted_days[0]
 
-@app.route('/upload_sensor_data', methods=['POST'])
+@app.route('/upload_sensor_data', methods=['POST', 'GET'])
 def process_data():
     temperature = float(request.form.get('Temp'))
     humidity = float(request.form.get('humi'))
@@ -61,7 +61,7 @@ def process_data():
     }
     return jsonify(response)
 
-@app.route('/upload_image', methods=['POST'])
+@app.route('/upload_image', methods=['POST', 'GET'])
 def upload_image():
     image_file = request.files['image']
     if image_file:

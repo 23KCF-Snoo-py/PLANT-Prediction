@@ -1,25 +1,24 @@
-import json
-import base64
 import requests
 
-def lambda_handler(event, context):
-    image_path = 'path/to/image.png'  # 전송할 이미지 파일 경로
-    endpoint_url = 'http://172.31.33.222:1234/upload_image'  # Flask 서버의 엔드포인트 URL
+# Flask 서버 주소와 엔드포인트 지정
+server_url = "http://172.31.33.222:1234/upload_sensor_data"
 
-    with open(image_path, 'rb') as image_file:
-        image_data = base64.b64encode(image_file.read()).decode('utf-8')
+# GET 요청에 사용할 데이터 지정
+data = {
+    'Temp': 25.0,
+    'humi': 40.0,
+    'soil': 0.6,
+    'cds': 300.0
+}
 
-    data = {
-        'image': image_data
-    }
+# GET 요청 보내기
+response = requests.get(server_url, params=data)
 
-    headers = {
-        'Content-Type': 'application/json'
-    }
-
-    response = requests.post(endpoint_url, data=json.dumps(data), headers=headers)
-
-    if response.status_code == 200:
-        print('Image uploaded successfully')
-    else:
-        print('Failed to upload image')
+# 응답 처리
+if response.status_code == 200:
+    result = response.json()
+    print("Predicted Days:")
+    for plant, days in result['predicted_days'].items():
+        print(f"{plant}: {days}")
+else:
+    print("Failed to get predicted days. Status code:", response.status_code)
