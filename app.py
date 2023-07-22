@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 import cv2
 import pandas as pd
 from sklearn.linear_model import LinearRegression
+import numpy as np
 import logging
 
 app = Flask(__name__)
