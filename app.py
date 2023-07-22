@@ -4,9 +4,10 @@ from flask import Flask, request, jsonify
 import cv2
 import pandas as pd
 from sklearn.linear_model import LinearRegression
+import logging
 
 app = Flask(__name__)
-
+app.logger.setLevel(logging.DEBUG)
 def analyze_leaf(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     average_color = image.mean(axis=0).mean(axis=0)
