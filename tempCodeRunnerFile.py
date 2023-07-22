@@ -42,10 +42,19 @@ def predict_growing_days(temperature, humidity, soil_moisture, cds):
 
 @app.route('/upload_sensor_data', methods=['POST', 'GET'])
 def process_data():
-    temperature = float(request.form.get('Temp'))
-    humidity = float(request.form.get('humi'))
-    soil_moisture = float(request.form.get('soil'))
-    cds = float(request.form.get('cds'))
+    if request.method == 'POST':
+        temperature = float(request.form.get('Temp'))
+        humidity = float(request.form.get('humi'))
+        soil_moisture = float(request.form.get('soil'))
+        cds = float(request.form.get('cds'))
+    elif request.method == 'GET':
+        temperature = float(request.args.get('Temp'))
+        humidity = float(request.args.get('humi'))
+        soil_moisture = float(request.args.get('soil'))
+        cds = float(request.args.get('cds'))
+    else:
+        return jsonify({'error': 'Method not allowed'}), 405
+
     predicted_days = predict_growing_days(temperature, humidity, soil_moisture, cds)
     app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}, CDS: {}".format(temperature, humidity, soil_moisture, cds))
     response = {
@@ -60,6 +69,7 @@ def process_data():
         }
     }
     return jsonify(response)
+
 
 @app.route('/upload_image', methods=['POST', 'GET'])
 def upload_image():
