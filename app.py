@@ -92,7 +92,7 @@ def upload_image():
 
                 # Process the image (e.g., analyze it)
                 leaf_status = analyze_leaf(cv2.imdecode(np.frombuffer(jpg_data, np.uint8), cv2.COLOR_BGR2RGB))
-                app.logger.info("Leaf Status: {}".format(leaf_status))
+                app.logger.debug("Leaf Status: {}".format(leaf_status))
                 # Return the analysis result
                 response = {
                     'leaf_status': leaf_status,
