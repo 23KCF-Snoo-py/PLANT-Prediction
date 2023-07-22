@@ -74,6 +74,8 @@ def process_data():
     }
     return jsonify(response)
     
+# (이하 생략)
+
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
     try:
@@ -92,16 +94,19 @@ def upload_image():
 
                 # Process the image (e.g., analyze it)
                 leaf_status = analyze_leaf(cv2.imdecode(np.frombuffer(jpg_data, np.uint8), cv2.COLOR_BGR2RGB))
-                app.logger.debug("Leaf Status: {}".format(leaf_status))
-                # Return the analysis result
+
+                # Return the analysis result as JSON response
                 response = {
                     'leaf_status': leaf_status,
                 }
-                return jsonify(response)
+                return jsonify(response)  # 이 부분이 수정된 부분입니다.
 
         return jsonify({"status": "error", "message": "No image found in the request"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
+
+# (이하 생략)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
