@@ -1,3 +1,5 @@
+from PIL import Image
+import io
 from flask import Flask, request, jsonify
 import cv2
 import pandas as pd
@@ -69,21 +71,33 @@ def process_data():
         }
     }
     return jsonify(response)
-
-
-@app.route('/upload_image', methods=['POST', 'GET'])
+    
+@app.route('/upload_image', methods=['POST'])
 def upload_image():
-    image_file = request.files['image']
-    if image_file:
-        image_path = 'path/to/save/image.jpg'
-        image_file.save(image_path)
-    leaf_status = analyze_leaf(image_file)
+    try:
+        if 'image' in request.files:
+            image_file = request.files['image']
+            if image_file.filename != '':
+                # Save the received image temporarily
+                image_data = image_file.read()
+                image = Image.open(io.BytesIO(image_data))
 
-    response = {
-        'leaf_status': leaf_status,
-    }
-    return jsonify(response)
+                # Convert the image to JPG format
+                jpg_image = io.BytesIO()
+                image.save(jpg_image, format='JPEG')
 
+                # Process the image (e.g., analyze it)
+                leaf_status = analyze_leaf(image)
+
+                # Return the analysis result
+                response = {
+                    'leaf_status': leaf_status,
+                }
+                return jsonify(response)
+
+        return jsonify({"status": "error", "message": "No image found in the request"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
