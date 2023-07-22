@@ -82,12 +82,14 @@ def upload_image():
                 image_data = image_file.read()
                 image = Image.open(io.BytesIO(image_data))
 
-                # Convert the image to JPG format
+                # Convert the image to JPEG format and get the binary data
                 jpg_image = io.BytesIO()
                 image.save(jpg_image, format='JPEG')
+                jpg_image.seek(0)
+                jpg_data = jpg_image.getvalue()
 
                 # Process the image (e.g., analyze it)
-                leaf_status = analyze_leaf(image)
+                leaf_status = analyze_leaf(cv2.imdecode(np.frombuffer(jpg_data, np.uint8), cv2.COLOR_BGR2RGB))
 
                 # Return the analysis result
                 response = {
