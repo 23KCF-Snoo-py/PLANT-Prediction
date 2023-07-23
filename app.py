@@ -61,6 +61,7 @@ def process_data():
 
     predicted_days = predict_growing_days(temperature, humidity, soil_moisture, cds)
     app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}, CDS: {}".format(temperature, humidity, soil_moisture, cds))
+    app.logger.debug(predicted_days[0])
     response = {
         'predicted_days': {
             'Lettuce': predicted_days[0],
