@@ -9,18 +9,18 @@ import logging
 
 app = Flask(__name__)
 app.logger.setLevel(logging.DEBUG)
+
 def analyze_leaf(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     average_color = image.mean(axis=0).mean(axis=0)
     green_percentage = (average_color[1] / 255) * 100
     return green_percentage
 
-def predict_growing_days(temperature, humidity, soil_moisture, cds):
+def predict_growing_days(temperature, humidity, soil_moisture):
     training_data = {
         'temp': [20, 25, 30, 35, 40],
         'humi': [30, 35, 40, 45, 50],
         'soilMoisture': [0.2, 0.4, 0.6, 0.8, 1.0],
-        'cds': [100, 200, 300, 400, 500],  # 가정한 조도(빛의 밝기) 값
         'Lettuce': [60, 65, 70, 75, 80],
         'Basil': [50, 55, 60, 65, 70],
         'Strawberry': [70, 75, 80, 85, 90],
@@ -30,15 +30,14 @@ def predict_growing_days(temperature, humidity, soil_moisture, cds):
         'Kale': [45, 50, 55, 60, 65]
     }
     df = pd.DataFrame(training_data)
-    X = df[['temp', 'humi', 'soilMoisture', 'cds']]
+    X = df[['temp', 'humi', 'soilMoisture']]
     y = df[['Lettuce', 'Basil', 'Strawberry', 'Tomato', 'Herb', 'Celery', 'Kale']]
     model = LinearRegression()
     model.fit(X, y)
     new_data = {
         'temp': [temperature],
         'humi': [humidity],
-        'soilMoisture': [soil_moisture],
-        'cds': [cds]
+        'soilMoisture': [soil_moisture]
     }
     df_new = pd.DataFrame(new_data)
     predicted_days = model.predict(df_new)
@@ -50,18 +49,17 @@ def process_data():
         temperature = float(request.form.get('Temp'))
         humidity = float(request.form.get('humi'))
         soil_moisture = float(request.form.get('soil'))
-        cds = float(request.form.get('cds'))
     elif request.method == 'GET':
         temperature = float(request.args.get('Temp'))
         humidity = float(request.args.get('humi'))
         soil_moisture = float(request.args.get('soil'))
-        cds = float(request.args.get('cds'))
     else:
         return jsonify({'error': 'Method not allowed'}), 405
 
-    predicted_days = predict_growing_days(temperature, humidity, soil_moisture, cds)
-    app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}, CDS: {}".format(temperature, humidity, soil_moisture, cds))
-    app.logger.debug(predicted_days[0])
+    predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
+    app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
+    app.logger.debug(predicted_days)
+
     response = {
         'predicted_days': {
             'Lettuce': predicted_days[0],
@@ -74,8 +72,6 @@ def process_data():
         }
     }
     return jsonify(response)
-    
-# (이하 생략)
 
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
@@ -96,18 +92,18 @@ def upload_image():
                 # Process the image (e.g., analyze it)
                 leaf_status = analyze_leaf(cv2.imdecode(np.frombuffer(jpg_data, np.uint8), cv2.COLOR_BGR2RGB))
 
+                # Log the leaf_status along with other information
+                app.logger.debug("Received image and analyzed leaf_status: {}".format(leaf_status))
+
                 # Return the analysis result as JSON response
                 response = {
                     'leaf_status': leaf_status,
                 }
-                return jsonify(response)  # 이 부분이 수정된 부분입니다.
+                return jsonify(response)
 
         return jsonify({"status": "error", "message": "No image found in the request"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
-
-# (이하 생략)
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
