@@ -6,8 +6,11 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 import numpy as np
 import logging
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app)
 app.logger.setLevel(logging.DEBUG)
 
 def analyze_leaf(image):
@@ -129,6 +132,6 @@ def upload_image():
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
 
-            
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
