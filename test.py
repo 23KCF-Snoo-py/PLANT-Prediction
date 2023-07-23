@@ -1,24 +1,15 @@
 import requests
 
-# Flask 서버 주소와 엔드포인트 지정
-server_url = "http://172.31.33.222:1234/upload_sensor_data"
-
-# GET 요청에 사용할 데이터 지정
-data = {
-    'Temp': 25.0,
-    'humi': 40.0,
-    'soil': 0.6,
-    'cds': 300.0
-}
+# GET 요청을 보낼 서버의 주소
+url = 'http://3.39.224.161/upload_image'
 
 # GET 요청 보내기
-response = requests.get(server_url, params=data)
+response = requests.get(url)
 
-# 응답 처리
+# 응답 결과 확인
 if response.status_code == 200:
-    result = response.json()
-    print("Predicted Days:")
-    for plant, days in result['predicted_days'].items():
-        print(f"{plant}: {days}")
+    data = response.json()
+    print("GET 요청에 대한 응답:")
+    print(data)
 else:
-    print("Failed to get predicted days. Status code:", response.status_code)
+    print("GET 요청 실패. 응답 코드:", response.status_code)
