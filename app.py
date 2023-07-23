@@ -73,37 +73,58 @@ def process_data():
     }
     return jsonify(response)
 
-@app.route('/upload_image', methods=['POST'])
+@app.route('/upload_image', methods=['POST', 'GET'])
 def upload_image():
-    try:
-        if 'image' in request.files:
-            image_file = request.files['image']
-            if image_file.filename != '':
-                # Save the received image temporarily
-                image_data = image_file.read()
-                image = Image.open(io.BytesIO(image_data))
+    if request.method == 'POST':
+        try:
+            if 'image' in request.files:
+                image_file = request.files['image']
+                if image_file.filename != '':
+                    # Save the received image temporarily
+                    image_data = image_file.read()
+                    image = Image.open(io.BytesIO(image_data))
 
                 # Convert the image to JPEG format and get the binary data
-                jpg_image = io.BytesIO()
-                image.save(jpg_image, format='JPEG')
-                jpg_image.seek(0)
-                jpg_data = jpg_image.getvalue()
+                    jpg_image = io.BytesIO()
+                    image.save(jpg_image, format='JPEG')
+                    jpg_image.seek(0)
+                    jpg_data = jpg_image.getvalue()
+                    leaf_status = analyze_leaf(cv2.imdecode(np.frombuffer(jpg_data, np.uint8), cv2.COLOR_BGR2RGB))
 
-                # Process the image (e.g., analyze it)
-                leaf_status = analyze_leaf(cv2.imdecode(np.frombuffer(jpg_data, np.uint8), cv2.COLOR_BGR2RGB))
+                    # Log the leaf_status along with other information
+                    app.logger.debug("Received image and analyzed leaf_status: {}".format(leaf_status))
 
-                # Log the leaf_status along with other information
-                app.logger.debug("Received image and analyzed leaf_status: {}".format(leaf_status))
+                    # Store the leaf_status value in a global variable or database to use later for GET request
+                    global predicted_leaf_status
+                    predicted_leaf_status = leaf_status
 
-                # Return the analysis result as JSON response
-                response = {
-                    'leaf_status': leaf_status,
-                }
-                return jsonify(response)
+                    # Return the analysis result as JSON response
+                    response = {
+                        'leaf_status': leaf_status,
+                    }
+                    return jsonify(response)
 
-        return jsonify({"status": "error", "message": "No image found in the request"})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
+            return jsonify({"status": "error", "message": "No image found in the request"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)})
+
+    elif request.method == 'GET':
+        try:
+        
+            leaf_status_for_get = predicted_leaf_status
+
+            app.logger.debug("Predicted leaf_status for GET request: {}".format(leaf_status_for_get))
+
+            response = {
+                'leaf_status': leaf_status_for_get,
+            }
+            return jsonify(response)
+
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)})
+
+    else:
+        return jsonify({'error': 'Method not allowed'}), 405
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
