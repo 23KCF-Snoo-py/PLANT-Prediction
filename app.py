@@ -114,8 +114,12 @@ def upload_image():
 
     elif request.method == 'GET':
         try:
+            app.logger.debug("GET request received.")
+            app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
+
+            # Check if the predicted_leaf_status is available
             if predicted_leaf_status is not None:
-                app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
+                # Return the predicted_leaf_status as JSON response for the GET request
                 response = {
                     'leaf_status': predicted_leaf_status,
                 }
@@ -125,5 +129,6 @@ def upload_image():
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
 
+            
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
