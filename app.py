@@ -77,7 +77,6 @@ def predict_growing_days(temperature, humidity, soil_moisture):
     df_new = pd.DataFrame(new_data)
     predicted_days = model.predict(df_new)
     return predicted_days[0]
-
 @app.route('/upload_sensor_data', methods=['POST', 'GET'])
 def process_data():
     global predicted_leaf_status
@@ -93,6 +92,13 @@ def process_data():
         # Store the predicted data in the database
         store_predicted_data(predicted_days)
 
+        # Prepare the previous_sensor_data to be sent in the response
+        previous_sensor_data = {
+            "Temp": temperature,
+            "humi": humidity,
+            "soil": soil_moisture
+        }
+
         response = {
             'predicted_days': {
                 'Lettuce': predicted_days[0],
@@ -102,7 +108,8 @@ def process_data():
                 'Herb': predicted_days[4],
                 'Celery': predicted_days[5],
                 'Kale': predicted_days[6]
-            }
+            },
+            'previous_sensor_data': previous_sensor_data
         }
         return jsonify(response)
 
@@ -117,7 +124,16 @@ def process_data():
             row = c.fetchone()
             if row is not None:
                 predicted_days = row
-                # Return the predicted data as JSON response for the GET request
+
+                # Get the previous sensor data from the database
+                c.execute('SELECT Temp, humi, soil FROM predicted_data ORDER BY id DESC LIMIT 1')
+                prev_sensor_data = c.fetchone()
+                if prev_sensor_data is not None:
+                    prev_temp, prev_humi, prev_soil = prev_sensor_data
+                else:
+                    prev_temp, prev_humi, prev_soil = None, None, None
+
+                # Return the predicted data and previous_sensor_data as JSON response for the GET request
                 response = {
                     'predicted_days': {
                         'Lettuce': predicted_days[0],
@@ -129,9 +145,9 @@ def process_data():
                         'Kale': predicted_days[6]
                     },
                     'previous_sensor_data': {
-                        'Temp': request.args.get('Temp'),
-                        'humi': request.args.get('humi'),
-                        'soil': request.args.get('soil')
+                        'Temp': prev_temp,
+                        'humi': prev_humi,
+                        'soil': prev_soil
                     }
                 }
                 return jsonify(response)
@@ -140,8 +156,61 @@ def process_data():
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
 
-# ... (existing code for uploading and analyzing image)
+@app.route('/upload_image', methods=['POST', 'GET'])
+def upload_image():
+    global predicted_leaf_status
+    if request.method == 'POST':
+        try:
+            if 'image' in request.files:
+                image_file = request.files['image']
+                if image_file.filename != '':
+                    # Save the received image temporarily
+                    image_data = image_file.read()
+                    image = Image.open(io.BytesIO(image_data))
 
+                    # Convert the image to JPEG format and get the binary data
+                    jpg_image = io.BytesIO()
+                    image.save(jpg_image, format='JPEG')
+                    jpg_image.seek(0)
+                    jpg_data = jpg_image.getvalue()
+
+                    # Process the image (e.g., analyze it)
+                    leaf_status = analyze_leaf(cv2.imdecode(np.frombuffer(jpg_data, np.uint8), cv2.COLOR_BGR2RGB))
+
+                    # Log the leaf_status along with other information
+                    app.logger.debug("Received image and analyzed leaf_status: {}".format(leaf_status))
+
+                    # Store the leaf_status value in the global variable to use later for GET request
+                    predicted_leaf_status = leaf_status
+
+                    # Return the analysis result as JSON response
+                    response = {
+                        'leaf_status': leaf_status,
+                    }
+                    return jsonify(response)
+
+            return jsonify({"status": "error", "message": "No image found in the request"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)})
+
+    elif request.method == 'GET':
+        try:
+            app.logger.debug("GET request received.")
+            app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
+
+            # Check if the predicted_leaf_status is available
+            if predicted_leaf_status is not None:
+                # Return the predicted_leaf_status as JSON response for the GET request
+                response = {
+                    'leaf_status': predicted_leaf_status,
+                }
+                return jsonify(response)
+            else:
+                return jsonify({"status": "error", "message": "No predicted data available."})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)})
+
+    
 if __name__ == '__main__':
     init_db()  # Initialize the database before running the app
     app.run(host='0.0.0.0', port=1234, debug=True)
