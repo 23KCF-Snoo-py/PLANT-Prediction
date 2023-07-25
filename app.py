@@ -50,7 +50,7 @@ def analyze_leaf(image):
     average_color = image.mean(axis=0).mean(axis=0)
     green_percentage = (average_color[1] / 255) * 100
     return green_percentage
-    
+
 def predict_growing_days(temperature, humidity, soil_moisture):
     training_data = {
         'temp': [20, 25, 30, 35, 40],
@@ -127,6 +127,11 @@ def process_data():
                         'Herb': predicted_days[4],
                         'Celery': predicted_days[5],
                         'Kale': predicted_days[6]
+                    },
+                    'previous_sensor_data': {
+                        'Temp': request.args.get('Temp'),
+                        'humi': request.args.get('humi'),
+                        'soil': request.args.get('soil')
                     }
                 }
                 return jsonify(response)
