@@ -81,6 +81,7 @@ def predict_growing_days(temperature, humidity, soil_moisture):
 @app.route('/upload_sensor_data', methods=['POST', 'GET'])
 def process_data():
     global predicted_leaf_status
+    global last_uploaded_data
     if request.method == 'POST':
         temperature = float(request.form.get('Temp'))
         humidity = float(request.form.get('humi'))
@@ -92,6 +93,10 @@ def process_data():
 
         # Store the predicted data in the database
         store_predicted_data(predicted_days)
+
+        last_uploaded_data['temperature'] = temperature
+        last_uploaded_data['humidity'] = humidity
+        last_uploaded_data['soil_moisture'] = soil_moisture
 
         response = {
             'predicted_days': {
@@ -128,6 +133,12 @@ def process_data():
                         'Celery': predicted_days[5],
                         'Kale': predicted_days[6]
                     }
+                },
+            elif last_uploaded_data['temperature'] is not None:
+                response = {
+                    'temperature': last_uploaded_data['temperature'],
+                    'humidity': last_uploaded_data['humidity'],
+                    'soil_moisture': last_uploaded_data['soil_moisture']
                 }
                 return jsonify(response)
             else:
