@@ -76,7 +76,7 @@ def predict_growing_days(temperature, humidity, soil_moisture):
     }
     df_new = pd.DataFrame(new_data)
     predicted_days = model.predict(df_new)
-    return predicted_days[0]
+    return predicted_days[0]# ...
 @app.route('/upload_sensor_data', methods=['POST', 'GET'])
 def process_data():
     global predicted_leaf_status
@@ -147,6 +147,8 @@ def process_data():
                 return jsonify({"status": "error", "message": "No predicted data available."})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
+
+# ...
 
 @app.route('/upload_image', methods=['POST', 'GET'])
 def upload_image():
