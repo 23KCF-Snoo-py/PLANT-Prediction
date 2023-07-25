@@ -120,34 +120,26 @@ def process_data():
             # Retrieve the latest predicted data from the database
             db = get_db()
             c = db.cursor()
-            c.execute('SELECT lettuce, basil, strawberry, tomato, herb, celery, kale FROM predicted_data ORDER BY id DESC LIMIT 1')
+            c.execute('SELECT lettuce, basil, strawberry, tomato, herb, celery, kale, temperature, humidity, soil_moisture FROM predicted_data ORDER BY id DESC LIMIT 1')
             row = c.fetchone()
             if row is not None:
-                predicted_days = row
-
-                # Get the previous sensor data from the database
-                c.execute('SELECT Temp, humi, soil FROM predicted_data ORDER BY id DESC LIMIT 1')
-                prev_sensor_data = c.fetchone()
-                if prev_sensor_data is not None:
-                    prev_temp, prev_humi, prev_soil = prev_sensor_data
-                else:
-                    prev_temp, prev_humi, prev_soil = None, None, None
+                lettuce, basil, strawberry, tomato, herb, celery, kale, temperature, humidity, soil_moisture = row
 
                 # Return the predicted data and previous_sensor_data as JSON response for the GET request
                 response = {
                     'predicted_days': {
-                        'Lettuce': predicted_days[0],
-                        'Basil': predicted_days[1],
-                        'Strawberry': predicted_days[2],
-                        'Tomato': predicted_days[3],
-                        'Herb': predicted_days[4],
-                        'Celery': predicted_days[5],
-                        'Kale': predicted_days[6]
+                        'Lettuce': lettuce,
+                        'Basil': basil,
+                        'Strawberry': strawberry,
+                        'Tomato': tomato,
+                        'Herb': herb,
+                        'Celery': celery,
+                        'Kale': kale
                     },
                     'previous_sensor_data': {
-                        'Temp': prev_temp,
-                        'humi': prev_humi,
-                        'soil': prev_soil
+                        'Temp': temperature,
+                        'humi': humidity,
+                        'soil': soil_moisture
                     }
                 }
                 return jsonify(response)
