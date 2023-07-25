@@ -73,21 +73,18 @@ def process_data():
     elif request.method == 'GET':
         try:
             app.logger.debug("GET request received.")
-            app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
 
             # Check if the predicted_leaf_status is available
-            if predicted_leaf_status is not None:
+            if 'predicted_leaf_status' in globals():
                 # Return the predicted_leaf_status as JSON response for the GET request
                 response = {
                     'leaf_status': predicted_leaf_status,
                 }
                 return jsonify(response)
             else:
-                return jsonify({"status": "error", "message": "No predicted data available."})
+                return jsonify({"status": "error", "message": "예측된 데이터가 없습니다."})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
-    else:
-        return jsonify({'error': 'Method not allowed'}), 405
 
 @app.route('/upload_image', methods=['POST', 'GET'])
 def upload_image():
