@@ -8,11 +8,34 @@ import numpy as np
 import logging
 from flask_cors import CORS
 
+import sqlite3
 
 app = Flask(__name__)
 CORS(app)
 app.logger.setLevel(logging.DEBUG)
 
+# Create or connect to the database
+conn = sqlite3.connect('predicted_data.db')
+c = conn.cursor()
+
+# Create a table for predicted data if it doesn't exist
+c.execute('''
+    CREATE TABLE IF NOT EXISTS predicted_data (
+        id INTEGER PRIMARY KEY,
+        lettuce REAL,
+        basil REAL,
+        strawberry REAL,
+        tomato REAL,
+        herb REAL,
+        celery REAL,
+        kale REAL
+    )
+''')
+
+# Function to store predicted data in the database
+def store_predicted_data(predicted_days):
+    c.execute('INSERT INTO predicted_data (lettuce, basil, strawberry, tomato, herb, celery, kale) VALUES (?, ?, ?, ?, ?, ?, ?)', tuple(predicted_days))
+    conn.commit()
 def analyze_leaf(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     average_color = image.mean(axis=0).mean(axis=0)
@@ -58,6 +81,9 @@ def process_data():
         app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
         app.logger.debug(predicted_days)
 
+        # Store the predicted data in the database
+        store_predicted_data(predicted_days)
+
         response = {
             'predicted_days': {
                 'Lettuce': predicted_days[0],
@@ -74,13 +100,23 @@ def process_data():
     elif request.method == 'GET':
         try:
             app.logger.debug("GET request received.")
-            app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
-
-            # Check if the predicted_leaf_status is available
-            if predicted_leaf_status is not None:
-                # Return the predicted_leaf_status as JSON response for the GET request
+            
+            # Retrieve the latest predicted data from the database
+            c.execute('SELECT lettuce, basil, strawberry, tomato, herb, celery, kale FROM predicted_data ORDER BY id DESC LIMIT 1')
+            row = c.fetchone()
+            if row is not None:
+                predicted_days = row
+                # Return the predicted data as JSON response for the GET request
                 response = {
-                    'leaf_status': predicted_leaf_status,
+                    'predicted_days': {
+                        'Lettuce': predicted_days[0],
+                        'Basil': predicted_days[1],
+                        'Strawberry': predicted_days[2],
+                        'Tomato': predicted_days[3],
+                        'Herb': predicted_days[4],
+                        'Celery': predicted_days[5],
+                        'Kale': predicted_days[6]
+                    }
                 }
                 return jsonify(response)
             else:
