@@ -132,14 +132,13 @@ def process_data():
                         'Herb': predicted_days[4],
                         'Celery': predicted_days[5],
                         'Kale': predicted_days[6]
+                    },
+                    'information': {
+                        'temperature': last_uploaded_data['temperature'],
+                        'humidity': last_uploaded_data['humidity'],
+                        'soil_moisture': last_uploaded_data['soil_moisture']
                     }
                 },
-            elif last_uploaded_data['temperature'] is not None:
-                response = {
-                    'temperature': last_uploaded_data['temperature'],
-                    'humidity': last_uploaded_data['humidity'],
-                    'soil_moisture': last_uploaded_data['soil_moisture']
-                }
                 return jsonify(response)
             else:
                 return jsonify({"status": "error", "message": "No predicted data available."})
