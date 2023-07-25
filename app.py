@@ -13,6 +13,12 @@ app = Flask(__name__)
 CORS(app)
 app.logger.setLevel(logging.DEBUG)
 
+last_uploaded_data = {
+    'temperature': None,
+    'humidity': None,
+    'soil_moisture': None
+}
+
 # Function to get the database connection for the current thread
 def get_db():
     if 'db' not in g:
