@@ -45,6 +45,7 @@ def predict_growing_days(temperature, humidity, soil_moisture):
     df_new = pd.DataFrame(new_data)
     predicted_days = model.predict(df_new)
     return predicted_days[0]
+
 @app.route('/upload_sensor_data', methods=['POST', 'GET'])
 def process_data():
     global predicted_leaf_status
@@ -73,16 +74,17 @@ def process_data():
     elif request.method == 'GET':
         try:
             app.logger.debug("GET request received.")
+            app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
 
             # Check if the predicted_leaf_status is available
-            if 'predicted_leaf_status' in globals():
+            if predicted_leaf_status is not None:
                 # Return the predicted_leaf_status as JSON response for the GET request
                 response = {
                     'leaf_status': predicted_leaf_status,
                 }
                 return jsonify(response)
             else:
-                return jsonify({"status": "error", "message": "예측된 데이터가 없습니다."})
+                return jsonify({"status": "error", "message": "No predicted data available."})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
 
@@ -139,7 +141,6 @@ def upload_image():
                 return jsonify({"status": "error", "message": "No predicted data available."})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
