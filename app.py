@@ -45,38 +45,49 @@ def predict_growing_days(temperature, humidity, soil_moisture):
     df_new = pd.DataFrame(new_data)
     predicted_days = model.predict(df_new)
     return predicted_days[0]
-
 @app.route('/upload_sensor_data', methods=['POST', 'GET'])
 def process_data():
+    global predicted_leaf_status
     if request.method == 'POST':
         temperature = float(request.form.get('Temp'))
         humidity = float(request.form.get('humi'))
         soil_moisture = float(request.form.get('soil'))
+        predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
+
+        app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
+        app.logger.debug(predicted_days)
+
+        response = {
+            'predicted_days': {
+                'Lettuce': predicted_days[0],
+                'Basil': predicted_days[1],
+                'Strawberry': predicted_days[2],
+                'Tomato': predicted_days[3],
+                'Herb': predicted_days[4],
+                'Celery': predicted_days[5],
+                'Kale': predicted_days[6]
+            }
+        }
+        return jsonify(response)
+
     elif request.method == 'GET':
-        temperature = float(request.args.get('Temp'))
-        humidity = float(request.args.get('humi'))
-        soil_moisture = float(request.args.get('soil'))
+        try:
+            app.logger.debug("GET request received.")
+            app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
+
+            # Check if the predicted_leaf_status is available
+            if predicted_leaf_status is not None:
+                # Return the predicted_leaf_status as JSON response for the GET request
+                response = {
+                    'leaf_status': predicted_leaf_status,
+                }
+                return jsonify(response)
+            else:
+                return jsonify({"status": "error", "message": "No predicted data available."})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)})
     else:
         return jsonify({'error': 'Method not allowed'}), 405
-
-    predicted_days = predict_growing_days(temperature, humidity, soil_moisture)
-    app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
-    app.logger.debug(predicted_days)
-
-    response = {
-        'predicted_days': {
-            'Lettuce': predicted_days[0],
-            'Basil': predicted_days[1],
-            'Strawberry': predicted_days[2],
-            'Tomato': predicted_days[3],
-            'Herb': predicted_days[4],
-            'Celery': predicted_days[5],
-            'Kale': predicted_days[6]
-        }
-    }
-    return jsonify(response)
-
-predicted_leaf_status = None
 
 @app.route('/upload_image', methods=['POST', 'GET'])
 def upload_image():
