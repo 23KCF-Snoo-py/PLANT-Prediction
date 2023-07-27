@@ -151,8 +151,53 @@ def process_data():
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
 
-# ... (existing code for uploading and analyzing image)
+@app.route('/upload_image', methods=['POST', 'GET'])
+def upload_image():
+    global predicted_leaf_status
+    if request.method == 'POST':
+        try:
+            if 'image' in request.files:
+                image_file = request.files['image']
+                if image_file.filename != '':
+                    image_data = image_file.read()
+                    image = Image.open(io.BytesIO(image_data))
+
+                    jpg_image = io.BytesIO()
+                    image.save(jpg_image, format='JPEG')
+                    jpg_image.seek(0)
+                    jpg_data = jpg_image.getvalue()
+
+                    leaf_status = analyze_leaf(cv2.imdecode(np.frombuffer(jpg_data, np.uint8), cv2.COLOR_BGR2RGB))
+
+        
+                    app.logger.debug("Received image and analyzed leaf_status: {}".format(leaf_status))
+
+                    predicted_leaf_status = leaf_status
+
+                    response = {
+                        'leaf_status': leaf_status,
+                    }
+                    return jsonify(response)
+
+            return jsonify({"status": "error", "message": "No image found in the request"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)})
+
+    elif request.method == 'GET':
+        try:
+            app.logger.debug("GET request received.")
+            app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
+
+            if predicted_leaf_status is not None:
+                response = {
+                    'leaf_status': predicted_leaf_status,
+                }
+                return jsonify(response)
+            else:
+                return jsonify({"status": "error", "message": "No predicted data available."})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)})
 
 if __name__ == '__main__':
-    init_db()  # Initialize the database before running the app
+    init_db() 
     app.run(host='0.0.0.0', port=1234, debug=True)
