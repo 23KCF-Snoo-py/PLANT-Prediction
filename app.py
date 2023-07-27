@@ -19,13 +19,10 @@ last_uploaded_data = {
     'soil_moisture': None
 }
 
-# Function to get the database connection for the current thread
 def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect('predicted_data.db')
     return g.db
-
-# Create a table for predicted data if it doesn't exist
 def init_db():
     with app.app_context():
         db = get_db()
@@ -44,7 +41,6 @@ def init_db():
         ''')
         db.commit()
 
-# Function to store predicted data in the database
 def store_predicted_data(predicted_days):
     db = get_db()
     c = db.cursor()
@@ -97,7 +93,6 @@ def process_data():
         app.logger.debug("Received data - Temperature: {}, Humidity: {}, Soil Moisture: {}".format(temperature, humidity, soil_moisture))
         app.logger.debug(predicted_days)
 
-        # Store the predicted data in the database
         store_predicted_data(predicted_days)
 
         last_uploaded_data['temperature'] = temperature
@@ -121,14 +116,12 @@ def process_data():
         try:
             app.logger.debug("GET request received.")
             
-            # Retrieve the latest predicted data from the database
             db = get_db()
             c = db.cursor()
             c.execute('SELECT lettuce, basil, strawberry, tomato, herb, celery, kale FROM predicted_data ORDER BY id DESC LIMIT 1')
             row = c.fetchone()
             if row is not None:
                 predicted_days = row
-                # Return the predicted data as JSON response for the GET request
                 response = {
                     'predicted_days': {
                         'Lettuce': predicted_days[0],
