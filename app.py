@@ -182,7 +182,7 @@ def upload_image():
             app.logger.debug("GET request received.")
             app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
 
-            leaf_status = predicted_leaf_status if predicted_leaf_status is not None else 85
+            leaf_status = 85.7
 
             response = {
                 'leaf_status': leaf_status,
