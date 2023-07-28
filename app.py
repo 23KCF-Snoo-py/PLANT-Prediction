@@ -143,7 +143,7 @@ def process_data():
                 return jsonify({"status": "error", "message": "No predicted data available."})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
-
+predicted_leaf_status = None
 @app.route('/upload_image', methods=['POST', 'GET'])
 def upload_image():
     global predicted_leaf_status
