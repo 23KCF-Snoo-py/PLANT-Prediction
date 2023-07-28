@@ -162,7 +162,6 @@ def upload_image():
 
                     leaf_status = analyze_leaf(cv2.imdecode(np.frombuffer(jpg_data, np.uint8), cv2.COLOR_BGR2RGB))
 
-        
                     app.logger.debug("Received image and analyzed leaf_status: {}".format(leaf_status))
 
                     predicted_leaf_status = leaf_status
@@ -171,8 +170,10 @@ def upload_image():
                         'leaf_status': leaf_status,
                     }
                     return jsonify(response)
-
-            return jsonify({"status": "error", "message": "No image found in the request"})
+                else:
+                    return jsonify({"status": "error", "message": "No image file provided."})
+            else:
+                return jsonify({"status": "error", "message": "No image found in the request"})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
 
@@ -181,15 +182,16 @@ def upload_image():
             app.logger.debug("GET request received.")
             app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
 
-            if predicted_leaf_status is not None:
-                response = {
-                    'leaf_status': predicted_leaf_status,
-                }
-                return jsonify(response)
-            else:
-                return jsonify({"status": "error", "message": "No predicted data available."})
+            leaf_status = predicted_leaf_status if predicted_leaf_status is not None else 85
+
+            response = {
+                'leaf_status': leaf_status,
+            }
+            return jsonify(response)
+
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)})
+
 
 if __name__ == '__main__':
     init_db() 
