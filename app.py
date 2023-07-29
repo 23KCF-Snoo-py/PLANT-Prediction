@@ -183,7 +183,6 @@ def upload_image():
             app.logger.debug("Predicted leaf_status for GET request: {}".format(predicted_leaf_status))
 
             leaf_status = 85.7
-
             response = {
                 'leaf_status': leaf_status,
             }
