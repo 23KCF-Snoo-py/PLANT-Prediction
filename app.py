@@ -120,6 +120,7 @@ def process_data():
             c = db.cursor()
             c.execute('SELECT lettuce, basil, strawberry, tomato, herb, celery, kale FROM predicted_data ORDER BY id DESC LIMIT 1')
             row = c.fetchone()
+            leaf_status = 85.7
             if row is not None:
                 predicted_days = row
                 response = {
@@ -136,7 +137,8 @@ def process_data():
                         'temperature': last_uploaded_data['temperature'],
                         'humidity': last_uploaded_data['humidity'],
                         'soil_moisture': last_uploaded_data['soil_moisture']
-                    }
+                    },
+                    'leaf_status': leaf_status
                 },
                 return jsonify(response)
             else:
